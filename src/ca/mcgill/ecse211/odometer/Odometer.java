@@ -20,13 +20,25 @@ public class Odometer extends OdometerData implements Runnable {
   // Motors and related variables
   private int leftMotorTachoCount;
   private int rightMotorTachoCount;
+  private int lastTachoL;
+  private int lastTachoR;
   private EV3LargeRegulatedMotor leftMotor;
   private EV3LargeRegulatedMotor rightMotor;
+  private double distL;
+  private double distR;
 
   private final double TRACK;
   private final double WHEEL_RAD;
 
-  private double[] position;
+  private double dX;
+  private double dY;
+  
+  private double deltaD;
+  private double deltaT;
+  
+  private double theta;
+  
+  private double[] position = {0,0,0};
 
 
   private static final long ODOMETER_PERIOD = 25; // odometer update period in ms
@@ -108,7 +120,23 @@ public class Odometer extends OdometerData implements Runnable {
       // TODO Calculate new robot position based on tachometer counts
       
       // TODO Update odometer values with new calculated values
-      odo.update(0.5, 1.8, 20.1);
+      //System.out.println("X: " + odo.getXYT()[0] + " Y: " + odo.getXYT()[1] + " T: " + odo.getXYT()[2]);
+      
+      distL = Math.PI*WHEEL_RAD*(leftMotorTachoCount-lastTachoL)/180;
+      distR = Math.PI*WHEEL_RAD*(rightMotorTachoCount-lastTachoR)/180;
+      
+      lastTachoL = leftMotorTachoCount;
+      lastTachoR = rightMotorTachoCount;
+      
+      deltaD = 0.5*(distL+distR);
+      deltaT = (distL-distR)/TRACK;
+      theta += deltaT;
+      
+      dX = deltaD * Math.sin(theta);
+      dY = deltaD * Math.cos(theta);
+      
+      odo.update(dX, dY, 180*deltaT/Math.PI);
+      
 
       // this ensures that the odometer only runs once every period
       updateEnd = System.currentTimeMillis();
