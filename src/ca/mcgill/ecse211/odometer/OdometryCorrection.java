@@ -15,6 +15,8 @@ public class OdometryCorrection implements Runnable {
   private EV3ColorSensor color;
   private double[] currentPosition;
   private double[] lastPosition;
+  private int yCount;
+  private int xCount;
   private double correctedX, correctedY;
   private int lastColor = 2;
   private int currentColor;
@@ -53,17 +55,33 @@ public class OdometryCorrection implements Runnable {
     	  currentPosition = odometer.getXYT();
     	  Sound.beep();
     	  
-    	  try {
-    		  correctedX = lastPosition[0] + TILE_SIZE * Math.cos(currentPosition[2]);
-        	  correctedY = lastPosition[1] + TILE_SIZE * Math.sin(currentPosition[1]);
-    	  } catch (NullPointerException e) {
-    		  
-    	  } finally {
-    		  lastPosition = currentPosition;
-    	  }
+    	  yCount += Math.round(Math.cos(Math.toRadians(currentPosition[2])));
+    	  xCount += Math.round(Math.sin(Math.toRadians(currentPosition[2])));
     	  
+    	  //System.out.println("Theta: " + currentPosition[2]);
+    	  //System.out.println("Y-count: " + yCount);
+    	  //System.out.println("X-count: " + xCount);
     	  
-    	  odometer.setXYT(correctedX, correctedY, currentPosition[2]);
+    	  odometer.setXYT(Math.max(xCount-1,0)*TILE_SIZE,(Math.max(yCount-1,0))*TILE_SIZE,currentPosition[2]);
+    	  
+//    	  currentPosition = odometer.getXYT();
+//    	  Sound.beep();
+//    	  
+//    	  try {
+//    		  if(Math.abs(currentPosition[2]-lastPosition[2]) > 80.0) lastPosition = null; //If we have turned, reset.
+//    		  
+//    		  //Casting makes no sense as no further operations will be performed with these numbers. Just take the hit from the slower float operations.
+//    		  correctedX = lastPosition[0] + TILE_SIZE * Math.sin(currentPosition[2]);
+//        	  correctedY = lastPosition[1] + TILE_SIZE * Math.cos(currentPosition[2]);
+//    	  } catch (NullPointerException e) {
+//    		  correctedX = currentPosition[0];
+//    		  correctedY = currentPosition[1];
+//    	  } finally {
+//    		  lastPosition = new double[] {correctedX, correctedY, currentPosition[2]};
+//    	  }
+//    	  
+//    	  
+//    	  odometer.setXYT(correctedX, correctedY, currentPosition[2]);
       }
 
       // this ensure the odometry correction occurs only once every period

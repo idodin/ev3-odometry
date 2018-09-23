@@ -118,18 +118,19 @@ public class Odometer extends OdometerData implements Runnable {
       rightMotorTachoCount = rightMotor.getTachoCount();
       //System.out.println("X: " + odo.getXYT()[0] + " Y: " + odo.getXYT()[1] + " T: " + odo.getXYT()[2]);
       
+      //Scale and cast to integer for faster operations.
       distL = Math.PI*WHEEL_RAD*(leftMotorTachoCount-lastTachoL)/180;
       distR = Math.PI*WHEEL_RAD*(rightMotorTachoCount-lastTachoR)/180;
       
       lastTachoL = leftMotorTachoCount;
       lastTachoR = rightMotorTachoCount;
       
-      deltaD = 0.5*(distL+distR);
+      deltaD = (distL+distR)*0.5;
       deltaT = (distL-distR)/TRACK;
-      theta += deltaT;
+      theta += deltaT; //Scaling Back.
       
-      dX = deltaD * Math.sin(theta);
-      dY = deltaD * Math.cos(theta);
+      dX = deltaD * Math.sin(theta); //Scaling Back.
+      dY = deltaD * Math.cos(theta); //Scaling Back.
       
       odo.update(dX, dY, 180*deltaT/Math.PI);
       
