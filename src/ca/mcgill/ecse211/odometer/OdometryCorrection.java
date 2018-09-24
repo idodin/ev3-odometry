@@ -14,10 +14,10 @@ public class OdometryCorrection implements Runnable {
   private Odometer odometer;
   private EV3ColorSensor color;
   private double[] currentPosition;
-  private double[] lastPosition;
   private int yCount;
   private int xCount;
-  private double correctedX, correctedY;
+  private int xInc;
+  private int yInc;
   private int lastColor = 2;
   private int currentColor;
   private static final double TILE_SIZE = 30.48;
@@ -55,6 +55,9 @@ public class OdometryCorrection implements Runnable {
     	  currentPosition = odometer.getXYT();
     	  Sound.beep();
     	  
+    	  yInc = Math.round((float)Math.sin(Math.toRadians(currentPosition[2])));
+    	  xInc = Math.round((float)Math.sin(Math.toRadians(currentPosition[2])));
+    	  
     	  yCount += Math.round(Math.cos(Math.toRadians(currentPosition[2])));
     	  xCount += Math.round(Math.sin(Math.toRadians(currentPosition[2])));
     	  
@@ -62,7 +65,7 @@ public class OdometryCorrection implements Runnable {
     	  //System.out.println("Y-count: " + yCount);
     	  //System.out.println("X-count: " + xCount);
     	  
-    	  odometer.setXYT(Math.max(xCount-1,0)*TILE_SIZE,(Math.max(yCount-1,0))*TILE_SIZE,currentPosition[2]);
+    	  odometer.setXYT(xInc > 0 ? (xCount-1)*TILE_SIZE : currentPosition[0], yInc > 0 ? (yCount-1)*TILE_SIZE : currentPosition[1],currentPosition[2]);
     	  
 //    	  currentPosition = odometer.getXYT();
 //    	  Sound.beep();
