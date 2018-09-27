@@ -114,25 +114,26 @@ public class Odometer extends OdometerData implements Runnable {
     while (true) {
       updateStart = System.currentTimeMillis();
 
+      
       leftMotorTachoCount = leftMotor.getTachoCount();
       rightMotorTachoCount = rightMotor.getTachoCount();
-      //System.out.println("X: " + odo.getXYT()[0] + " Y: " + odo.getXYT()[1] + " T: " + odo.getXYT()[2]);
       
-      //Scale and cast to integer for faster operations.
+      //Calculate Left and Right Wheel Distances.
       distL = Math.PI*WHEEL_RAD*(leftMotorTachoCount-lastTachoL)/180;
       distR = Math.PI*WHEEL_RAD*(rightMotorTachoCount-lastTachoR)/180;
       
       lastTachoL = leftMotorTachoCount;
       lastTachoR = rightMotorTachoCount;
       
+      
       deltaD = (distL+distR)*0.5;
       deltaT = (distL-distR)/TRACK;
-      theta += deltaT; //Scaling Back.
+      theta += deltaT; 
       
-      dX = deltaD * Math.sin(theta); //Scaling Back.
-      dY = deltaD * Math.cos(theta); //Scaling Back.
+      dX = deltaD * Math.sin(theta); 
+      dY = deltaD * Math.cos(theta); 
       
-      odo.update(dX, dY, 180*deltaT/Math.PI);
+      odo.update(dX, dY, 180*deltaT/Math.PI); // Convert back to degrees.
       
 
       // this ensures that the odometer only runs once every period

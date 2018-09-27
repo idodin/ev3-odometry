@@ -11,6 +11,7 @@ import lejos.hardware.sensor.EV3ColorSensor;
 
 public class OdometryCorrection implements Runnable {
   private static final long CORRECTION_PERIOD = 10;
+  private static final double SENSOR_OFFSET = 2.5;
   private Odometer odometer;
   private EV3ColorSensor color;
   private double[] currentPosition;
@@ -18,6 +19,8 @@ public class OdometryCorrection implements Runnable {
   private int xCount;
   private int xInc;
   private int yInc;
+  private double newX;
+  private double newY;
   private int lastColor = 2;
   private int currentColor;
   private static final double TILE_SIZE = 30.48;
@@ -49,42 +52,40 @@ public class OdometryCorrection implements Runnable {
     while (true) {
       correctionStart = System.currentTimeMillis();
       
+      //If detect black line.
       currentColor = color.getColorID();
       if(currentColor - lastColor > 5) {
     	  
     	  currentPosition = odometer.getXYT();
     	  Sound.beep();
     	  
-    	  yInc = Math.round((float)Math.sin(Math.toRadians(currentPosition[2])));
+    	  // How much do you increment by?
+    	  yInc = Math.round((float)Math.cos(Math.toRadians(currentPosition[2])));
     	  xInc = Math.round((float)Math.sin(Math.toRadians(currentPosition[2])));
     	  
-    	  yCount += Math.round(Math.cos(Math.toRadians(currentPosition[2])));
-    	  xCount += Math.round(Math.sin(Math.toRadians(currentPosition[2])));
+    	  yCount += yInc;
+    	  xCount += xInc;
     	  
-    	  //System.out.println("Theta: " + currentPosition[2]);
-    	  //System.out.println("Y-count: " + yCount);
-    	  //System.out.println("X-count: " + xCount);
+    	  //Are we crossing tile boundary from the upper or lower boundary?
+    	  if (xInc < 0) {
+    		  newX = xCount * TILE_SIZE ;
+    	  } else if (xInc > 0) {
+    		  newX = (xCount - 1) * TILE_SIZE ;
+    	  } else {
+    		  newX = currentPosition[0];
+    	  }
     	  
-    	  odometer.setXYT(xInc > 0 ? (xCount-1)*TILE_SIZE : currentPosition[0], yInc > 0 ? (yCount-1)*TILE_SIZE : currentPosition[1],currentPosition[2]);
+    	  if (yInc < 0) {
+    		  newY = yCount * TILE_SIZE + SENSOR_OFFSET;
+    	  } else if (yInc > 0) {
+    		  newY = (yCount - 1) * TILE_SIZE - SENSOR_OFFSET;
+    	  } else {
+    		  newY = currentPosition[1];
+    	  }
     	  
-//    	  currentPosition = odometer.getXYT();
-//    	  Sound.beep();
-//    	  
-//    	  try {
-//    		  if(Math.abs(currentPosition[2]-lastPosition[2]) > 80.0) lastPosition = null; //If we have turned, reset.
-//    		  
-//    		  //Casting makes no sense as no further operations will be performed with these numbers. Just take the hit from the slower float operations.
-//    		  correctedX = lastPosition[0] + TILE_SIZE * Math.sin(currentPosition[2]);
-//        	  correctedY = lastPosition[1] + TILE_SIZE * Math.cos(currentPosition[2]);
-//    	  } catch (NullPointerException e) {
-//    		  correctedX = currentPosition[0];
-//    		  correctedY = currentPosition[1];
-//    	  } finally {
-//    		  lastPosition = new double[] {correctedX, correctedY, currentPosition[2]};
-//    	  }
-//    	  
-//    	  
-//    	  odometer.setXYT(correctedX, correctedY, currentPosition[2]);
+    	  
+    	  odometer.setXYT(newX, newY, currentPosition[2]);
+    	  
       }
 
       // this ensure the odometry correction occurs only once every period
